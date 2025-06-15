@@ -1,53 +1,40 @@
 import streamlit as st
+from algorithm import ford_fulkerson
+from utils import draw_graph
 
-def ford_fulkerson(g, s, t):
-    def bfs(r, s, t, p):
-        v = set()
-        q = [s]
-        v.add(s)
-        while q:
-            u = q.pop(0)
-            for n in r.get(u, {}):
-                if n not in v and r[u][n] > 0:
-                    q.append(n)
-                    v.add(n)
-                    p[n] = u
-                    if n == t:
-                        return True
-        return False
+# Default graph data
+default_graph = {
+    'S': {'A': 16, 'C': 13},
+    'A': {'B': 12},
+    'B': {'T': 20},
+    'C': {'A': 4, 'D': 14},
+    'D': {'B': 7, 'T': 4},
+    'T': {}
+}
 
-    r = {u: dict(g[u]) for u in g}
-    mf = 0
-    p = {}
-    while bfs(r, s, t, p):
-        pf = float('inf')
-        n = t
-        while n != s:
-            pf = min(pf, r[p[n]][n])
-            n = p[n]
-        mf += pf
-        n = t
-        while n != s:
-            u = p[n]
-            r[u][n] -= pf
-            r.setdefault(n, {}).setdefault(u, 0)
-            r[n][u] += pf
-            n = u
-        p = {}
-    return mf
+st.title("Ford-Fulkerson Maximum Flow Visualizer")
 
-# Basit arayüz
-st.title("Maksimum Akış Hesaplama (Basit)")
+st.sidebar.header("Graph Input")
 
-if st.button("Çalıştır"):
-    graph = {
-        'S': {'A': 16, 'C': 13},
-        'A': {'B': 12},
-        'B': {'T': 20},
-        'C': {'A': 4, 'D': 14},
-        'D': {'B': 7, 'T': 4},
-        'T': {}
-    }
+use_default = st.sidebar.checkbox("Use default graph", value=True)
 
-    result = ford_fulkerson(graph, 'S', 'T')
-    st.write(f"Maksimum Akış: {result}")
+if use_default:
+    graph = default_graph
+else:
+    st.warning("Currently, only the default graph is supported.")
+    graph = default_graph
+
+source = st.sidebar.text_input("Source node", "S")
+sink = st.sidebar.text_input("Sink node", "T")
+
+if st.button("Run Algorithm"):
+    st.subheader("1. Initial Graph")
+    draw_graph(graph, title="Initial Graph")
+
+    max_flow, steps = ford_fulkerson(graph, source, sink)
+
+    for i, step in enumerate(steps):
+        st.subheader(f"Step {i+1}: Flow = {step['path_flow']}")
+        draw_graph(step['residual_graph'], title=f"Residual Graph (Step {i+1})", path=step['path'])
+
+    st.success(f"🔚 Maximum Flow: {max_flow}")
