@@ -4,7 +4,7 @@ This project implements the Ford-Fulkerson algorithm using Python and Streamlit.
 
 ## Live App
 
-https://ff-by-eren3.streamlit.app
+https://ff-by-eren.streamlit.app/
 
 ## Features
 
