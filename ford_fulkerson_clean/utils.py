@@ -12,10 +12,11 @@ def draw_graph(graph, title="Graph"):
     labels = nx.get_edge_attributes(G, 'capacity')
 
     plt.figure(figsize=(8, 6))
-    plt.title(title)  # Başlık ekleniyor
     nx.draw(G, pos, with_labels=True, node_color='lightblue', node_size=1500, arrows=True)
     nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
+    plt.title(title)
 
-    st.pyplot(plt)
+    st.pyplot(plt.gcf())
     plt.clf()
+
 
