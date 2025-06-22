@@ -1,53 +1,50 @@
-from collections import deque
-
-def bfs(residual_graph, source, sink, parent):
-    visited = set()
-    queue = deque([source])
-    visited.add(source)
-
-    while queue:
-        u = queue.popleft()
-        for v in residual_graph[u]:
-            if v not in visited and residual_graph[u][v] > 0:
-                queue.append(v)
-                visited.add(v)
-                parent[v] = u
-                if v == sink:
-                    return True
-    return False
-
 def ford_fulkerson(graph, source, sink):
-    residual_graph = {u: {} for u in graph}
-    for u in graph:
-        for v in graph[u]:
-            residual_graph[u][v] = graph[u][v]
-            if v not in residual_graph:
-                residual_graph[v] = {}
-            if u not in residual_graph[v]:
-                residual_graph[v][u] = 0
-
-    parent = {}
+    residual_graph = {u: dict(v) for u, v in graph.items()}
     max_flow = 0
     steps = []
 
-    while bfs(residual_graph, source, sink, parent):
+    while True:
+        visited = set()
+        parent = {}
+
+        def dfs(u):
+            visited.add(u)
+            if u == sink:
+                return True
+            for v in residual_graph.get(u, {}):
+                if v not in visited and residual_graph[u][v] > 0:
+                    parent[v] = u
+                    if dfs(v):
+                        return True
+            return False
+
+        found_path = dfs(source)
+        if not found_path:
+            break
+
+        path = []
+        v = sink
         path_flow = float('inf')
-        s = sink
-        while s != source:
-            path_flow = min(path_flow, residual_graph[parent[s]][s])
-            s = parent[s]
+        while v != source:
+            u = parent[v]
+            path.insert(0, (u, v))
+            path_flow = min(path_flow, residual_graph[u][v])
+            v = u
 
         v = sink
         while v != source:
             u = parent[v]
             residual_graph[u][v] -= path_flow
-            residual_graph[v][u] += path_flow
-            v = parent[v]
+            residual_graph.setdefault(v, {})
+            residual_graph[v][u] = residual_graph[v].get(u, 0) + path_flow
+            v = u
 
         max_flow += path_flow
-
-        step_snapshot = {u: residual_graph[u].copy() for u in residual_graph}
-        steps.append(step_snapshot)
+        steps.append({
+            'path': path,
+            'path_flow': path_flow,
+            'residual_graph': {u: dict(v) for u, v in residual_graph.items()}
+        })
 
     return max_flow, steps
 
